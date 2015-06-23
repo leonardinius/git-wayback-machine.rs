@@ -17,4 +17,9 @@ fn main() {
         Ok(stash) => println!("Stash: {}", stash),
         Err(e) => panic!("Error: {}", e),
     }
+
+    match git::reset(&get_current_dir(), "HEAD") {
+        Ok(reset) => println!("reset: {}", reset),
+        Err(e) => panic!("Error: {}", e),
+    }
 }
