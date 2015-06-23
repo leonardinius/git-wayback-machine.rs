@@ -2,3 +2,7 @@
 name = "git-wayback-machine"
 version = "0.1.0"
 authors = ["Leonids Maslovs <leonidms@gmail.com>"]
+
+[dependencies]
+rustbox = "*"
+log = "*"
