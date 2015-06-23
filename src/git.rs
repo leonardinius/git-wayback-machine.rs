@@ -66,7 +66,7 @@ fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
     if output.status.success() {
         let txt = String::from_utf8_lossy(&output.stdout);
         debug!("Success: out={:?}", txt);
-        Ok((*txt).to_owned())
+        Ok(String::from(&*txt))
     } else {
         let out = String::from_utf8_lossy(&output.stdout);
         let err = String::from_utf8_lossy(&output.stderr);
