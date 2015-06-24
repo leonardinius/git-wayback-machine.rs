@@ -6,3 +6,4 @@ authors = ["Leonids Maslovs <leonidms@gmail.com>"]
 [dependencies]
 rustbox = "*"
 log = "*"
+env_logger = "*"

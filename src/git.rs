@@ -56,7 +56,7 @@ pub type Result<T> = result::Result<T, GitCommandError>;
 
 fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
     let git = get_git_bin();
-    debug!("Executing {:?} {:?}", dir, args);
+    debug!("Executing {:?} {:?} {:?}", git.display(), dir, args);
 
     let output = try!(process::Command::new(git)
         .current_dir(dir)
