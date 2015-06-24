@@ -2,10 +2,10 @@ use std::env;
 use std::error::Error;
 use std::fmt;
 use std::io;
+use std::ops::Add;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::result;
-use std::ops::Add;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -54,7 +54,7 @@ fn get_git_bin() -> PathBuf {
 
 pub type Result<T> = result::Result<T, GitCommandError>;
 
-fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
+pub fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
     let git = get_git_bin();
     debug!("Executing {:?} {:?} {:?}", git.display(), dir, args);
 

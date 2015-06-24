@@ -1,3 +1,4 @@
+#![feature(associated_consts)]
 use std::env;
 use std::path::PathBuf;
 
@@ -6,6 +7,9 @@ extern crate log;
 extern crate env_logger;
 
 mod git;
+mod history;
+
+use history::{Entry, History};
 
 fn get_current_dir() -> PathBuf {
     env::current_dir().unwrap_or_else(|e| {
@@ -18,13 +22,19 @@ fn main() {
         panic!("Failed to init env_logger properly. Error: {}", e);
     });
 
-    match git::stash(&get_current_dir()) {
-        Ok(stash) => println!("Stash: {}", stash),
-        Err(e) => panic!("Error: {}", e),
-    }
+    let cwd = &get_current_dir();
+    {
+        let history = History::new(cwd);
+        println!("History: {}", history.len());
 
-    match git::reset(&get_current_dir(), "HEAD") {
-        Ok(reset) => println!("reset: {}", reset),
-        Err(e) => panic!("Error: {}", e),
+        match git::stash(cwd) {
+            Ok(stash) => println!("Stash: {}", stash),
+            Err(e) => panic!("Error: {}", e),
+        }
+
+        match git::reset(cwd, "HEAD") {
+            Ok(reset) => println!("reset: {}", reset),
+            Err(e) => panic!("Error: {}", e),
+        }
     }
 }
