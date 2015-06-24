@@ -28,14 +28,14 @@ pub struct History<'a> {
     cwd: &'a Path,
 }
 
-const GIT_ONE_LINE_DETAILS : &'static str = "log --pretty=format:'%h|%an|%cr|%s'";
+const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:'%h|%an|%cr|%s'"];
 
 impl<'a> History<'a> {
 
     pub fn new(cwd: &Path) -> History { History{ cwd : cwd } }
 
     pub fn len(&self) -> i32 {
-        let mut args: Vec<&str> = vec![GIT_ONE_LINE_DETAILS];
+        let mut args: Vec<&str> = GIT_ONE_LINE_DETAILS.to_vec();
         args.push(" | wc -l");
 
         git::exec_git(self.cwd, &args[ .. ]);
