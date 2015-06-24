@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::fmt;
 use std::path::Path;
 
@@ -28,14 +27,13 @@ pub struct History<'a> {
     cwd: &'a Path,
 }
 
-const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:'%h|%an|%cr|%s'"];
-
 impl<'a> History<'a> {
+    const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:'%h|%an|%cr|%s'"];
 
     pub fn new(cwd: &Path) -> History { History{ cwd : cwd } }
 
     pub fn len(&self) -> i32 {
-        let mut args: Vec<&str> = GIT_ONE_LINE_DETAILS.to_vec();
+        let mut args: Vec<&str> = History::GIT_ONE_LINE_DETAILS.to_vec();
         args.push(" | wc -l");
 
         git::exec_git(self.cwd, &args[ .. ]);
