@@ -25,16 +25,16 @@ fn main() {
     let cwd = &get_current_dir();
     {
         let history = History::new(cwd);
-        println!("History: {}", history.len());
+        println!("History: {:?}", history.count());
 
-        match git::stash(cwd) {
-            Ok(stash) => println!("Stash: {}", stash),
-            Err(e) => panic!("Error: {}", e),
-        }
+        // match git::stash(cwd) {
+        //     Ok(stash) => println!("Stash: {}", stash),
+        //     Err(e) => panic!("Error: {}", e),
+        // }
 
-        match git::reset(cwd, "HEAD") {
-            Ok(reset) => println!("reset: {}", reset),
-            Err(e) => panic!("Error: {}", e),
-        }
+        // match git::reset(cwd, "HEAD") {
+        //     Ok(reset) => println!("reset: {}", reset),
+        //     Err(e) => panic!("Error: {}", e),
+        // }
     }
 }

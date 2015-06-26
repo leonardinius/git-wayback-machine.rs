@@ -2,9 +2,11 @@ use std::env;
 use std::error::Error;
 use std::fmt;
 use std::io;
+use std::io::{Read, Write};
 use std::ops::Add;
 use std::path::{Path, PathBuf};
-use std::process;
+use std::process::{Command, Stdio};
+use std::process::Child as ChildProcess;
 use std::result;
 
 #[allow(dead_code)]
@@ -54,11 +56,11 @@ fn get_git_bin() -> PathBuf {
 
 pub type Result<T> = result::Result<T, GitCommandError>;
 
-pub fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
-    let git = get_git_bin();
-    debug!("Executing {:?} {:?} {:?}", git.display(), dir, args);
+pub fn git_exec(dir: &Path, args: &[&str]) -> Result<String> {
+    let git_bin = get_git_bin();
+    debug!("Executing `{:?} {:?} {:?}`", git_bin, dir.display(), args);
 
-    let output = try!(process::Command::new(git)
+    let output = try!(Command::new(git_bin)
         .current_dir(dir)
         .args(args)
         .output());
@@ -76,10 +78,46 @@ pub fn exec_git(dir: &Path, args: &[&str]) -> Result<String> {
     }
 }
 
+pub fn git_pipe(pipe: &mut Command, dir: &Path, args: &[&str]) -> Result<String> {
+    let git_bin = get_git_bin();
+    debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args, pipe);
+
+    let git = try!(Command::new(git_bin)
+        .current_dir(dir)
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn());
+
+    let mut pipe_process = try!(pipe
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn());
+
+    try!(io::copy(git.stdout.expect("Expected Git stdout").by_ref(),
+                  pipe_process.stdin.as_mut().expect("Expected preset Stdio::piped")));
+
+    let output = try!(pipe_process.wait_with_output());
+
+    if output.status.success() {
+        let txt = String::from_utf8_lossy(&output.stdout);
+        debug!("Success: out={:?}", txt);
+        Ok(String::from(&*txt))
+    } else {
+        let out = String::from_utf8_lossy(&output.stdout);
+        let err = String::from_utf8_lossy(&output.stderr);
+        let code = output.status.code().unwrap_or(-1);
+        debug!("Error: code={}, stdout={:?}, stderr={:?}", code, out, err);
+        Err(GitCommandError::ExitCode(code, String::from(&*out).add(&*err)))
+    }
+}
+
 pub fn stash(dir: &Path) ->  Result<String> {
-    exec_git(dir, &["stash", "-u"])
+    git_exec(dir, &["stash", "-u"])
 }
 
 pub fn reset(dir: &Path, commit: &str) ->  Result<String> {
-    exec_git(dir, &["reset", "--hard", commit])
+    git_exec(dir, &["reset", "--hard", commit])
 }

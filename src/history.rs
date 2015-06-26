@@ -1,5 +1,6 @@
 use std::fmt;
 use std::path::Path;
+use std::process::Command;
 
 use git;
 
@@ -25,19 +26,22 @@ impl<'a> Entry<'a> {
 
 pub struct History<'a> {
     cwd: &'a Path,
+    count: Option<i32>,
 }
 
 impl<'a> History<'a> {
     const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:'%h|%an|%cr|%s'"];
 
-    pub fn new(cwd: &Path) -> History { History{ cwd : cwd } }
+    pub fn new(cwd: &Path) -> History { History{ cwd : cwd, count: Self::__count__(cwd) } }
 
-    pub fn len(&self) -> i32 {
-        let mut args: Vec<&str> = History::GIT_ONE_LINE_DETAILS.to_vec();
-        args.push(" | wc -l");
+    fn __count__(cwd: &Path) -> Option<i32> {
+        let mut args: Vec<&str> = Self::GIT_ONE_LINE_DETAILS.to_vec();
 
-        git::exec_git(self.cwd, &args[ .. ]);
-
-        -1
+        git::git_pipe(Command::new("wc").arg("-l"),
+                      cwd, &args[ .. ])
+            .map(|s| s.trim().parse::<i32>().unwrap_or(0))
+            .ok()
     }
+
+    pub fn count(&self) -> Option<i32> { self.count }
 }
