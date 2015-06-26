@@ -24,8 +24,16 @@ fn main() {
 
     let cwd = &get_current_dir();
     {
-        let history = History::new(cwd);
+        let history = History::new(4, cwd);
         println!("History: {:?}", history.count());
+
+        println!("\\------------------
+                 History: {}
+                 ", (&history.get_page_data(0).unwrap()[..]).connect("\n\n"));
+
+        println!("\\------------------
+                 History: {}
+                 ", (&history.get_page_data(1).unwrap()[..]).connect("\n\n"));
 
         // match git::stash(cwd) {
         //     Ok(stash) => println!("Stash: {}", stash),

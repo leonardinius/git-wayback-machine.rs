@@ -1,12 +1,13 @@
 use std::env;
 use std::error::Error;
+use std::ffi::OsStr;
 use std::fmt;
 use std::io;
 use std::io::{Read, Write};
 use std::ops::Add;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::process::Child as ChildProcess;
+use std::process::{Command, Stdio};
 use std::result;
 
 #[allow(dead_code)]
@@ -56,9 +57,9 @@ fn get_git_bin() -> PathBuf {
 
 pub type Result<T> = result::Result<T, GitCommandError>;
 
-pub fn git_exec(dir: &Path, args: &[&str]) -> Result<String> {
+pub fn git_exec<S: AsRef<OsStr>>(dir: &Path, args: &[S]) -> Result<String> {
     let git_bin = get_git_bin();
-    debug!("Executing `{:?} {:?} {:?}`", git_bin, dir.display(), args);
+    debug!("Executing `{:?} {:?} {:?}`", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>());
 
     let output = try!(Command::new(git_bin)
         .current_dir(dir)
@@ -78,9 +79,9 @@ pub fn git_exec(dir: &Path, args: &[&str]) -> Result<String> {
     }
 }
 
-pub fn git_pipe(pipe: &mut Command, dir: &Path, args: &[&str]) -> Result<String> {
+pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> Result<String> {
     let git_bin = get_git_bin();
-    debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args, pipe);
+    debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>(), pipe);
 
     let git = try!(Command::new(git_bin)
         .current_dir(dir)
