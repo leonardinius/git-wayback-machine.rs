@@ -1,3 +1,4 @@
+use log::LogLevel;
 use std::env;
 use std::error::Error;
 use std::ffi::OsStr;
@@ -59,7 +60,9 @@ pub type Result<T> = result::Result<T, GitCommandError>;
 
 pub fn git_exec<S: AsRef<OsStr>>(dir: &Path, args: &[S]) -> Result<String> {
     let git_bin = get_git_bin();
-    debug!("Executing `{:?} {:?} {:?}`", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>());
+    if log_enabled!(LogLevel::Debug) {
+        debug!("Executing `{:?} {:?} {:?}`", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>());
+    }
 
     let output = try!(Command::new(git_bin)
         .current_dir(dir)
@@ -81,7 +84,9 @@ pub fn git_exec<S: AsRef<OsStr>>(dir: &Path, args: &[S]) -> Result<String> {
 
 pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> Result<String> {
     let git_bin = get_git_bin();
-    debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>(), pipe);
+    if log_enabled!(LogLevel::Debug) {
+        debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>(), pipe);
+    }
 
     let git = try!(Command::new(git_bin)
         .current_dir(dir)

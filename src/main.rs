@@ -1,4 +1,5 @@
 #![feature(associated_consts)]
+#![feature(slice_patterns)]
 use std::env;
 use std::path::PathBuf;
 
@@ -25,20 +26,17 @@ fn main() {
     let cwd = &get_current_dir();
     {
         let history = History::new(4, cwd);
-        println!("History: {:?}", history.count());
+        println!("Entries: {:?}", history.entries_count());
 
-        println!("\\------------------
-                 History: {}
-                 ", (&history.get_page_data(0).unwrap()[..]).connect("\n\n"));
-
-        println!("\\------------------
-                 History: {}
-                 ", (&history.get_page_data(1).unwrap()[..]).connect("\n\n"));
+        for i in 0..history.page_count().unwrap_or(0) {
+            let page = history.get_page(i);
+            println!("Page {}: {:?}", i + 1, page);
+        }
 
         // match git::stash(cwd) {
         //     Ok(stash) => println!("Stash: {}", stash),
         //     Err(e) => panic!("Error: {}", e),
-        // }
+        // } 
 
         // match git::reset(cwd, "HEAD") {
         //     Ok(reset) => println!("reset: {}", reset),
