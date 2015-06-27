@@ -16,7 +16,7 @@ impl fmt::Display for Entry {
 }
 
 impl Entry {
-    pub fn new(commit: &str, name: &str, time: &str, comment: &str) -> Entry {
+    pub fn new(commit: &str, name: &str, time: &str, comment: &str) -> Self {
         Entry { commit : commit.to_owned(), name: name.to_owned(), time: time.to_owned(), comment: comment.to_owned() }
     }
 

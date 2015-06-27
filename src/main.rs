@@ -21,24 +21,25 @@ fn main() {
         panic!("Failed to init env_logger properly. Error: {}", e);
     });
 
-    let cwd = &get_current_dir();
-    {
-        let history = History::new(4, cwd);
-        println!("Entries: {:?}", history.entries_count());
+    let cwd = get_current_dir();
+    let history = History::new(4, &cwd);
 
-        for i in 0..history.page_count().unwrap_or(0) {
-            let page = history.get_page(i);
-            println!("Page {}: {:?}", i + 1, page);
+    loop {
+        if let Some(_) = loop_1(&history) {
+            break;
         }
 
-        // match git::stash(cwd) {
-        //     Ok(stash) => println!("Stash: {}", stash),
-        //     Err(e) => panic!("Error: {}", e),
-        // } 
-
-        // match git::reset(cwd, "HEAD") {
-        //     Ok(reset) => println!("reset: {}", reset),
-        //     Err(e) => panic!("Error: {}", e),
-        // }
+        break;
     }
+}
+
+fn loop_1(h: &History) -> Option<bool> {
+    println!("Entries: {:?}", h.entries_count());
+
+    for i in 0..h.page_count().unwrap_or(0) {
+        let page = h.get_page(i);
+        println!("Page {}: {:?}", i + 1, page);
+    }
+
+    None
 }
