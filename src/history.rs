@@ -33,10 +33,10 @@ pub struct History<'a> {
     page_size: i32,
 }
 
-impl<'a> History<'a> {
-    const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:%h|%an|%cr|%s"];
+const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:%h|%an|%cr|%s"];
 
-    pub fn new(size: i32, cwd: &Path) -> History {
+impl<'a> History<'a> {
+    pub fn new(size: i32, cwd: &'a Path) -> Self {
         History { page_size: size, cwd : cwd, entries_count: Self::__count__(cwd) }
     }
 
@@ -46,12 +46,12 @@ impl<'a> History<'a> {
 
     pub fn page_count(&self) -> Option<i32> { 
         self.entries_count()
-            .map(|e| e + self.page_size())
-            .map(|e| e / self.page_size())
+            // += page_size, so fix the rounding
+            .map(|e| (e + self.page_size()) / self.page_size())
     }
 
     fn __count__(cwd: &Path) -> Option<i32> {
-        let args = Self::GIT_ONE_LINE_DETAILS.to_vec();
+        let args = GIT_ONE_LINE_DETAILS.to_vec();
 
         git::git_pipe(Command::new("wc").arg("-l"),
                       cwd, args.as_ref())
@@ -71,15 +71,16 @@ impl<'a> History<'a> {
             .collect();
         debug!("make_entry: {:?} -> {:?}", line, parts);
 
-        if let [commit, name, time, comment] = &parts[..] {
-            Some(Entry::new(commit, name, time, comment))
+        assert!(parts.len() == 4, "Git log entry parse error");
+        if parts.len() == 4 {
+            Some(Entry::new(parts[0], parts[1], parts[2], parts[3]))
         } else {
             None
         }
     }
 
     fn get_page_data(&self, page: i32) -> Option<Vec<String>> {
-        let mut args = Self::GIT_ONE_LINE_DETAILS
+        let mut args = GIT_ONE_LINE_DETAILS
                         .iter()
                         .map(|e| String::from(*e))
                         .collect::<Vec<String>>();
