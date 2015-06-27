@@ -63,9 +63,11 @@ impl<'a> History<'a> {
         self.get_page_data(page)
             .map(|strings| strings.into_iter()
                       .filter_map(|ref line| self.make_entry(line))
-                      .inspect(|ref e| debug!("Inspect 1: {}", e))
+                      .into_iter()
+                      .enumerate().inspect(|&(ref e1, ref e2)| debug!("{} Page - Inspect 1-{}: {}", page, e1, e2)).map(|(e1, e2)| e2 )
                       .collect::<Vec<_>>()
-                      .into_iter().inspect(|ref e| debug!("Inspect 2: {}", e))
+                      .into_iter()
+                      .enumerate().inspect(|&(ref e1, ref e2)| debug!("{} Page - Inspect 2-{}: {}", page, e1, e2)).map(|(e1, e2)| e2 )
                       .collect::<Vec<_>>()
                 )
     }
