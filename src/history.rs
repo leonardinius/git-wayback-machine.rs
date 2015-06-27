@@ -16,7 +16,7 @@ impl fmt::Display for Entry {
 }
 
 impl Entry {
-    pub fn new(commit: &str, name: &str, time: &str, comment: &str) -> Entry {
+    pub fn new(commit: &str, name: &str, time: &str, comment: &str) -> Self {
         Entry { commit : commit.to_owned(), name: name.to_owned(), time: time.to_owned(), comment: comment.to_owned() }
     }
 
@@ -36,7 +36,7 @@ pub struct History<'a> {
 impl<'a> History<'a> {
     const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:%h|%an|%cr|%s"];
 
-    pub fn new(size: i32, cwd: &Path) -> History {
+    pub fn new(size: i32, cwd: &'a Path) -> Self {
         History { page_size: size, cwd : cwd, entries_count: Self::__count__(cwd) }
     }
 
