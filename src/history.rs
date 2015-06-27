@@ -63,10 +63,10 @@ impl<'a> History<'a> {
         self.get_page_data(page)
             .map(|strings| strings.into_iter()
                       .filter_map(|ref line| self.make_entry(line))
-                      //.inspect(|ref e| debug!("Inspect 1: {}", e))
+                      .inspect(|ref e| debug!("Inspect 1: {}", e))
                       .collect::<Vec<_>>()
-                      //.into_iter().inspect(|ref e| debug!("Inspect 2: {}", e))
-                      //.collect::<Vec<_>>()
+                      .into_iter().inspect(|ref e| debug!("Inspect 2: {}", e))
+                      .collect::<Vec<_>>()
                 )
     }
 
