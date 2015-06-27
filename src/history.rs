@@ -7,23 +7,23 @@ use std::process::Command;
 use git;
 
 #[derive(Debug, Clone)]
-pub struct Entry<'a> { name: &'a str, time: &'a str, comment: &'a str, commit: &'a str, }
+pub struct Entry { name: String, time: String, comment: String, commit: String, }
 
-impl<'a> fmt::Display for Entry<'a> {
+impl fmt::Display for Entry {
     fn fmt(& self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Entry: {:?} {:?} {:?}: {:?}", self.commit, self.time, self.name, self.comment)
     }
 }
 
-impl<'a> Entry<'a> {
-    pub fn new<S:?Sized + AsRef<str>>(commit: &'a S, name: &'a S, time: &'a S, comment: &'a S) -> Entry<'a> {
-        Entry { commit : commit.as_ref(), name: name.as_ref(), time: time.as_ref(), comment: comment.as_ref() }
+impl Entry {
+    pub fn new(commit: &str, name: &str, time: &str, comment: &str) -> Entry {
+        Entry { commit : commit.to_owned(), name: name.to_owned(), time: time.to_owned(), comment: comment.to_owned() }
     }
 
-    pub fn name(&self) -> &str { self.name }
-    pub fn time(&self) -> &str { self.time }
-    pub fn comment(&self) -> &str { self.comment }
-    pub fn commit(&self) -> &str { self.commit }
+    pub fn name(&self) -> &str { &*self.name }
+    pub fn time(&self) -> &str { &*self.time }
+    pub fn comment(&self) -> &str { &*self.comment }
+    pub fn commit(&self) -> &str { &*self.commit }
 }
 
 #[derive(Debug, Clone)]
@@ -62,17 +62,14 @@ impl<'a> History<'a> {
     pub fn get_page(&self, page: i32) -> Option<Vec<Entry>> {
         self.get_page_data(page)
             .map(|strings| strings.into_iter()
-                      .filter_map(|ref line| self.make_entry(line))
-                      .inspect(|ref e| debug!("Inspect 1: {}", e))
-                      .collect::<Vec<_>>()
-                      .into_iter().inspect(|ref e| debug!("Inspect 2: {}", e))
-                      .collect::<Vec<_>>()
-                )
+                    .filter_map(|line| Self::make_entry(line))
+                    .collect::<Vec<_>>())
     }
 
-    fn make_entry(&self, s: &'a String) -> Option<Entry> {
-        let parts: Vec<_> = s.trim().split('|').collect();
-        debug!("make_entry: {:?} -> {:?}", s, parts);
+    fn make_entry(line: String) -> Option<Entry> {
+        let parts: Vec<_> = line.trim().split('|')
+            .collect();
+        debug!("make_entry: {:?} -> {:?}", line, parts);
 
         if let [commit, name, time, comment] = &parts[..] {
             Some(Entry::new(commit, name, time, comment))
