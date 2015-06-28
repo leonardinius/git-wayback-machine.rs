@@ -1,14 +1,18 @@
+#![feature(core)]
+
 use std::env;
 use std::path::PathBuf;
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
 extern crate env_logger;
+extern crate rustbox;
 
 mod git;
 mod history;
+mod tui;
 
 use history::{Entry, History};
+use tui::{TUI, TuiEvent, TuiKey};
 
 fn get_current_dir() -> PathBuf {
     env::current_dir().unwrap_or_else(|e| {
@@ -22,24 +26,18 @@ fn main() {
     });
 
     let cwd = get_current_dir();
-    let history = History::new(4, &cwd);
+    let tui = TUI::new(&cwd);
+    tui.draw();
 
     loop {
-        if let Some(_) = loop_1(&history) {
-            break;
+        match tui.poll_event() {
+            TuiEvent::KeyEvent(TuiKey::Char('q')) => {
+                break;
+            },
+
+            TuiEvent::UnSupported => { /* ignore */ ; },
+
+            e => { println!("Not yet supported: {:?}", e); },
         }
-
-        break;
     }
-}
-
-fn loop_1(h: &History) -> Option<bool> {
-    println!("Entries: {:?}", h.entries_count());
-
-    for i in 0..h.page_count().unwrap_or(0) {
-        let page = h.get_page(i);
-        println!("Page {}: {:?}", i + 1, page);
-    }
-
-    None
 }

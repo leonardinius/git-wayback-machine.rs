@@ -29,37 +29,46 @@ impl Entry {
 #[derive(Debug, Clone)]
 pub struct History<'a> {
     cwd: &'a Path,
-    entries_count: Option<i32>,
-    page_size: i32,
+    page_size: usize,
 }
 
 const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:%h|%an|%cr|%s"];
 
 impl<'a> History<'a> {
-    pub fn new(size: i32, cwd: &'a Path) -> Self {
-        History { page_size: size, cwd : cwd, entries_count: Self::__count__(cwd) }
+    pub fn new(size: usize, cwd: &'a Path) -> Self {
+        History { page_size: size, cwd : cwd }
     }
 
-    pub fn entries_count(&self) -> Option<i32> { self.entries_count }
+    pub fn entries_count(&self) -> Option<usize> { Self::__count__(self.cwd) }
 
-    pub fn page_size(&self) -> i32 { self.page_size }
+    pub fn page_size(&self) -> usize { self.page_size }
 
-    pub fn page_count(&self) -> Option<i32> { 
+    pub fn cwd(&self) -> &str {
+        self.cwd.to_str().unwrap_or("?? unknown!")
+    }
+
+    pub fn resize(&mut self, page_size: usize) -> &mut Self {
+        self.page_size = page_size;
+
+        self
+    }
+
+    pub fn page_count(&self) -> Option<usize> {
         self.entries_count()
             // += page_size, so fix the rounding
             .map(|e| (e + self.page_size()) / self.page_size())
     }
 
-    fn __count__(cwd: &Path) -> Option<i32> {
+    fn __count__(cwd: &Path) -> Option<usize> {
         let args = GIT_ONE_LINE_DETAILS.to_vec();
 
         git::git_pipe(Command::new("wc").arg("-l"),
                       cwd, args.as_ref())
-            .map(|s| s.trim().parse::<i32>().unwrap_or(0))
+            .map(|s| s.trim().parse::<usize>().unwrap_or(0))
             .ok()
     }
 
-    pub fn get_page(&self, page: i32) -> Option<Vec<Entry>> {
+    pub fn get_page(&self, page: usize) -> Option<Vec<Entry>> {
         self.get_page_data(page)
             .map(|strings| strings.into_iter()
                     .filter_map(|line| Self::make_entry(line))
@@ -79,7 +88,7 @@ impl<'a> History<'a> {
         }
     }
 
-    fn get_page_data(&self, page: i32) -> Option<Vec<String>> {
+    fn get_page_data(&self, page: usize) -> Option<Vec<String>> {
         let mut args = GIT_ONE_LINE_DETAILS
                         .iter()
                         .map(|e| String::from(*e))
