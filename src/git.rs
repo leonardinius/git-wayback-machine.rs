@@ -7,7 +7,6 @@ use std::io;
 use std::io::{Read, Write};
 use std::ops::Add;
 use std::path::{Path, PathBuf};
-use std::process::Child as ChildProcess;
 use std::process::{Command, Stdio};
 use std::result;
 
@@ -120,10 +119,12 @@ pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> 
     }
 }
 
+#[allow(dead_code)]
 pub fn stash(dir: &Path) ->  Result<String> {
     git_exec(dir, &["stash", "-u"])
 }
 
+#[allow(dead_code)]
 pub fn reset(dir: &Path, commit: &str) ->  Result<String> {
     git_exec(dir, &["reset", "--hard", commit])
 }

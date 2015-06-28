@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::path::Path;
 
 use rustbox;
@@ -46,7 +45,7 @@ impl<'a> TUI<'a> {
         let rustbox = Self::init_rustbox();
         let height = rustbox.height() as usize;
 
-        TUI { page: 0, cursor: 0, rb: rustbox, history: History::new(height - 5, cwd) }
+        TUI { page: 0, cursor: 0, rb: rustbox, history: History::new(height - 4, cwd) }
     }
 
     pub fn page(&self) -> usize { self.page }
@@ -62,21 +61,17 @@ impl<'a> TUI<'a> {
             self.cursor = self.get_page_size(self.page()) -1;
         }
 
-        self.draw();
-
         self
     }
 
     pub fn move_down(&mut self) -> &mut Self {
             // TODO: optimize, redundant read
-        if self.cursor() + 1 > self.get_page_size(self.page) {
+        if self.cursor() >= self.get_page_size(self.page) - 1 {
             self.page_down();
             self.cursor = 0;
         } else {
             self.cursor += 1;
         }
-
-        self.draw();
 
         self
     }
@@ -86,8 +81,6 @@ impl<'a> TUI<'a> {
             self.page -= 1;
         }
 
-        self.draw();
-
         self
     }
 
@@ -96,15 +89,13 @@ impl<'a> TUI<'a> {
             self.page += 1;
         }
 
-        self.draw();
-
         self
     }
 
     pub fn resize(&mut self, height: usize) -> &mut Self {
         self.cursor = 0;
         self.page = 0;
-        self.history.resize(height);
+        self.history.resize(height - 4);
 
         self.draw();
 
@@ -113,10 +104,27 @@ impl<'a> TUI<'a> {
 
     pub fn draw(&self) -> &Self {
         let rb = &self.rb;
-        rb.print(1, 1, rustbox::RB_BOLD, Color::White, Color::Black,
-                 &format!("{}/{} [{}]", self.page(), self.get_page_count(), self.history.cwd()));
-        rb.print(1, 3, rustbox::RB_BOLD, Color::White, Color::Black,
-                      "Press 'q' to quit.");
+        rb.clear();
+
+        rb.print(4, 1, rustbox::RB_BOLD, Color::Green, Color::Black,
+                 &format!("{}/{} pages. [{}]", self.page() + 1, self.get_page_count(), self.history.cwd()));
+
+        let data = self.get_page_data(self.page());
+
+        for (i, line) in data.into_iter().enumerate() {
+            let active = i == self.cursor();
+            let color = if active { Color::Blue } else { Color::Cyan };
+            let bgcolor = if active { Color::White } else { Color::Black };
+
+            if active {
+                rb.print(1, i + 2, rustbox::RB_BOLD, Color::Red, Color::White, " * ");
+            }
+            rb.print(4, i + 2, rustbox::RB_NORMAL, color, bgcolor, 
+                     &format!("{:10} {:15} {:20} {}", line.commit(), line.time(), line.name(), line.comment()));
+        }
+
+        rb.print(4, self.history.page_size() + 3, rustbox::RB_BOLD, Color::Green, Color::Black,
+                      "Press: q - exit, Down - down, Up - up, PageDown - page down, PageUp - page up, R - refresh");
 
         rb.present();
 
@@ -148,7 +156,7 @@ impl<'a> TUI<'a> {
         }
     }
 
-    fn get_page(&self, page: usize) -> Vec<Entry> {
+    fn get_page_data(&self, page: usize) -> Vec<Entry> {
         self.history.get_page(page).unwrap_or(vec![])
     }
 
