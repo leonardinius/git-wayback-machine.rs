@@ -73,6 +73,23 @@ impl<'a> History<'a> {
                     .collect::<Vec<_>>())
     }
 
+    pub fn is_current_commit(&self, entry: &Entry) -> bool {
+        git::get_rev_short_sha(self.cwd, "HEAD")
+            .map(|sha| sha == entry.commit())
+            .unwrap_or(false)
+    }
+
+    pub fn reset_to(&mut self, entry: &Entry) -> bool {
+        match git::stash(self.cwd) {
+            Err(_) => {return false;},
+            _ => {;},
+        }
+        git::reset(self.cwd, entry.commit())
+            .map(|_| true)
+            .ok()
+            .unwrap_or(false)
+    }
+
     fn make_entry(line: String) -> Option<Entry> {
         let parts: Vec<_> = line.trim().split('|')
             .collect();

@@ -113,22 +113,44 @@ impl<'a> TUI<'a> {
 
         for (i, line) in data.into_iter().enumerate() {
             let active = i == self.cursor();
+            let current = self.is_current_commit(&line);
             let color = if active { Color::Blue } else { Color::Cyan };
             let bgcolor = if active { Color::White } else { Color::Black };
 
-            if active {
-                rb.print(1, i + 2, rustbox::RB_BOLD, Color::Red, Color::White, " * ");
+            if current {
+                rb.print(1, i + 2, rustbox::RB_BOLD, Color::Red, Color::Black, " * ");
             }
-            rb.print(4, i + 2, rustbox::RB_NORMAL, color, bgcolor, 
+            rb.print(4, i + 2, rustbox::RB_NORMAL, color, bgcolor,
                      &format!("{:10} {:15} {:20} {}", line.commit(), line.time(), line.name(), line.comment()));
         }
 
         rb.print(4, self.history.page_size() + 3, rustbox::RB_BOLD, Color::Green, Color::Black,
-                      "Press: q - exit, Down - down, Up - up, PageDown - page down, PageUp - page up, R - refresh");
+                      "Press: q - exit, Down - down, Up - up, PageDown - page down, PageUp - page up, R - reset");
 
         rb.present();
 
         self
+    }
+
+    pub fn reset_to_current(&mut self) -> bool {
+        self.get_cursor_entry()
+            .map(|ref e| self.history.reset_to(e))
+            .unwrap_or(false)
+    } 
+
+    pub fn get_cursor_entry(&self) -> Option<Entry>
+    {
+        let mut data = self.get_page_data(self.page());
+
+        if self.cursor() < data.len() {
+            Some(data.swap_remove(self.cursor()))
+        } else {
+            None
+        }
+    }
+
+    fn is_current_commit(&self, entry: &Entry) -> bool {
+        self.history.is_current_commit(entry)
     }
 
     pub fn poll_event(&self) -> TuiEvent {

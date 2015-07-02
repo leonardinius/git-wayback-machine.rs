@@ -119,12 +119,15 @@ pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> 
     }
 }
 
-#[allow(dead_code)]
 pub fn stash(dir: &Path) ->  Result<String> {
     git_exec(dir, &["stash", "-u"])
 }
 
-#[allow(dead_code)]
 pub fn reset(dir: &Path, commit: &str) ->  Result<String> {
     git_exec(dir, &["reset", "--hard", commit])
 }
+
+pub fn get_rev_short_sha(dir: &Path, rev: &str) ->  Result<String> {
+    git_exec(dir, &["rev-parse", "--short", rev]).map(|s| s.trim().to_string())
+}
+

@@ -33,7 +33,7 @@ fn main() {
             },
 
             TuiEvent::KeyEvent(TuiKey::Char('r')) | TuiEvent::KeyEvent(TuiKey::Char('R'))  => {
-                tui.draw();
+                tui.reset_to_current();
             },
 
             TuiEvent::KeyEvent(TuiKey::PageDown) => { tui.page_down(); tui.draw(); }
