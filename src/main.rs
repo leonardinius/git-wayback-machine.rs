@@ -29,11 +29,13 @@ fn main() {
     loop {
         match tui.poll_event() {
             TuiEvent::KeyEvent(TuiKey::Char('q')) | TuiEvent::KeyEvent(TuiKey::Char('Q'))  => {
+                tui.finish();
                 break;
             },
 
             TuiEvent::KeyEvent(TuiKey::Char('r')) | TuiEvent::KeyEvent(TuiKey::Char('R'))  => {
                 tui.reset_to_current();
+                tui.draw();
             },
 
             TuiEvent::KeyEvent(TuiKey::PageDown) => { tui.page_down(); tui.draw(); }

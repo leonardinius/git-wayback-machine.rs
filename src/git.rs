@@ -123,6 +123,10 @@ pub fn stash(dir: &Path) ->  Result<String> {
     git_exec(dir, &["stash", "-u"])
 }
 
+pub fn unstash(dir: &Path) ->  Result<String> {
+    git_exec(dir, &["stash", "apply"])
+}
+
 pub fn reset(dir: &Path, commit: &str) ->  Result<String> {
     git_exec(dir, &["reset", "--hard", commit])
 }

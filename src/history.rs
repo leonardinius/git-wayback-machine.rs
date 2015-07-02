@@ -28,7 +28,7 @@ impl Entry {
 pub struct History<'a> {
     cwd: &'a Path,
     head_rev: String,
-    stash: Option<bool>,
+    stash: Option<Option<String>>,
     page_size: usize,
 }
 
@@ -82,18 +82,25 @@ impl<'a> History<'a> {
                     .collect::<Vec<_>>())
     }
 
-    pub fn is_current_commit(&self, entry: &Entry) -> bool {
+    pub fn get_current_commit(&self) -> Option<String> {
         git::get_rev_short_sha(self.cwd, "HEAD")
-            .map(|sha| sha == entry.commit())
-            .unwrap_or(false)
+            .ok()
     }
 
     pub fn reset_to(&mut self, entry: &Entry) -> bool {
-        match git::stash(self.cwd) {
-            Err(_) => {return false;},
-            _ => {;},
-        }
+        match self.stash {
+            Some(_) => { ; },
+            None => { self.stash = Some(git::stash(self.cwd).ok()); },
+        };
+
         git::reset(self.cwd, entry.commit())
+            .map(|_| true)
+            .ok()
+            .unwrap_or(false)
+    }
+
+    pub fn unstash(&mut self) -> bool {
+        git::unstash(self.cwd)
             .map(|_| true)
             .ok()
             .unwrap_or(false)

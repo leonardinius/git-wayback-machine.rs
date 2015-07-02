@@ -65,7 +65,7 @@ impl<'a> TUI<'a> {
     }
 
     pub fn move_down(&mut self) -> &mut Self {
-            // TODO: optimize, redundant read
+        // TODO: optimize, redundant read
         if self.cursor() >= self.get_page_size(self.page) - 1 {
             self.page_down();
             self.cursor = 0;
@@ -109,11 +109,12 @@ impl<'a> TUI<'a> {
         rb.print(4, 1, rustbox::RB_BOLD, Color::Green, Color::Black,
                  &format!("{}/{} pages. [{}]", self.page() + 1, self.get_page_count(), self.history.cwd()));
 
+        let current_commit = self.get_current_commit().unwrap_or("".to_string());
         let data = self.get_page_data(self.page());
 
         for (i, line) in data.into_iter().enumerate() {
             let active = i == self.cursor();
-            let current = self.is_current_commit(&line);
+            let current = line.commit() == current_commit;
             let color = if active { Color::Blue } else { Color::Cyan };
             let bgcolor = if active { Color::White } else { Color::Black };
 
@@ -136,7 +137,11 @@ impl<'a> TUI<'a> {
         self.get_cursor_entry()
             .map(|ref e| self.history.reset_to(e))
             .unwrap_or(false)
-    } 
+    }
+
+    pub fn finish(&mut self) -> bool {
+        self.history.unstash()
+    }
 
     pub fn get_cursor_entry(&self) -> Option<Entry>
     {
@@ -149,8 +154,8 @@ impl<'a> TUI<'a> {
         }
     }
 
-    fn is_current_commit(&self, entry: &Entry) -> bool {
-        self.history.is_current_commit(entry)
+    fn get_current_commit(&self) -> Option<String> {
+        self.history.get_current_commit()
     }
 
     pub fn poll_event(&self) -> TuiEvent {
