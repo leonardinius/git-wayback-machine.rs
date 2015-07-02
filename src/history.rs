@@ -27,6 +27,8 @@ impl Entry {
 #[derive(Debug, Clone)]
 pub struct History<'a> {
     cwd: &'a Path,
+    head_rev: String,
+    stash: Option<bool>,
     page_size: usize,
 }
 
@@ -34,12 +36,19 @@ const GIT_ONE_LINE_DETAILS : [&'static str;2] = ["log", "--pretty=format:%h|%an|
 
 impl<'a> History<'a> {
     pub fn new(size: usize, cwd: &'a Path) -> Self {
-        History { page_size: size, cwd : cwd }
+        let head_rev = git::get_rev_short_sha(cwd, "HEAD")
+            .unwrap_or_else(|e| {
+                panic!("Failed to init head revision at `{}`: {}", cwd.display(), e);
+            });
+
+        History { page_size: size, cwd: cwd, head_rev: head_rev, stash: None }
     }
 
     pub fn entries_count(&self) -> Option<usize> { Self::__count__(self.cwd) }
 
     pub fn page_size(&self) -> usize { self.page_size }
+
+    pub fn head_rev(&self) -> &String { &self.head_rev }
 
     pub fn cwd(&self) -> &str {
         self.cwd.to_str().unwrap_or("?? unknown!")
@@ -109,11 +118,13 @@ impl<'a> History<'a> {
                         .map(|e| String::from(*e))
                         .collect::<Vec<String>>();
 
-        let arg1 = format!("--skip={}", self.page_size() * page);
-        let arg2 = format!("--max-count={}", self.page_size());
+        let arg1 = self.head_rev().clone();
+        let arg2 = format!("--skip={}", self.page_size() * page);
+        let arg3 = format!("--max-count={}", self.page_size());
 
         args.push(arg1);
         args.push(arg2);
+        args.push(arg3);
 
         git::git_exec(self.cwd, args.as_ref())
             .ok()
