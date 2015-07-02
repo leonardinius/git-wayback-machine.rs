@@ -33,7 +33,9 @@ fn main() {
                 break;
             },
 
-            TuiEvent::KeyEvent(TuiKey::Char('r')) | TuiEvent::KeyEvent(TuiKey::Char('R'))  => {
+            TuiEvent::KeyEvent(TuiKey::Enter) 
+                | TuiEvent::KeyEvent(TuiKey::Char('r')) 
+                | TuiEvent::KeyEvent(TuiKey::Char('R'))  => {
                 tui.reset_to_current();
                 tui.draw();
             },

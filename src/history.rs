@@ -100,10 +100,13 @@ impl<'a> History<'a> {
     }
 
     pub fn unstash(&mut self) -> bool {
-        git::unstash(self.cwd)
-            .map(|_| true)
-            .ok()
-            .unwrap_or(false)
+        match self.stash {
+            Some(Some(ref s)) if *s == "No local changes to save" => false, 
+            _ =>  git::unstash(self.cwd)
+                .map(|_| true)
+                .ok()
+                .unwrap_or(false) 
+        }
     }
 
     fn make_entry(line: String) -> Option<Entry> {

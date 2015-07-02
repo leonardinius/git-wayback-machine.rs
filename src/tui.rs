@@ -17,6 +17,7 @@ use history::{
 
 #[derive(Debug, Clone)]
 pub enum TuiKey {
+    Enter,
     Esc,
     Up,
     Down,
@@ -126,7 +127,7 @@ impl<'a> TUI<'a> {
         }
 
         rb.print(4, self.history.page_size() + 3, rustbox::RB_BOLD, Color::Green, Color::Black,
-                      "Press: q - exit, Down - down, Up - up, PageDown - page down, PageUp - page up, R - reset");
+                      "Press: q - exit, Down - down, Up - up, PageDown - page down, PageUp - page up, Enter/R - reset");
 
         rb.present();
 
@@ -164,6 +165,7 @@ impl<'a> TUI<'a> {
         {
             Event::KeyEvent(Some(key)) => {
                 match key {
+                    Key::Enter      => TuiEvent::KeyEvent(TuiKey::Enter),
                     Key::Esc        => TuiEvent::KeyEvent(TuiKey::Esc),
                     Key::Up         => TuiEvent::KeyEvent(TuiKey::Up),
                     Key::Down       => TuiEvent::KeyEvent(TuiKey::Down),
