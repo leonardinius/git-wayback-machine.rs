@@ -87,7 +87,7 @@ pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> 
         debug!("Pipe `{:?} {:?} {:?}` through {:?}", git_bin, dir.display(), args.iter().map(|e| e.as_ref().to_str()).collect::<Vec<_>>(), pipe);
     }
 
-    let git = try!(Command::new(git_bin)
+    let mut git_process = try!(Command::new(git_bin)
         .current_dir(dir)
         .args(args)
         .stdin(Stdio::piped())
@@ -101,19 +101,20 @@ pub fn git_pipe<S: AsRef<OsStr>>(pipe: &mut Command, dir: &Path, args: &[S]) -> 
         .stderr(Stdio::piped())
         .spawn());
 
-    try!(io::copy(git.stdout.expect("Expected Git stdout").by_ref(),
+    try!(io::copy(git_process.stdout.take().expect("Expected Git stdout").by_ref(),
                   pipe_process.stdin.as_mut().expect("Expected preset Stdio::piped")));
 
-    let output = try!(pipe_process.wait_with_output());
+    let pipe_output = try!(pipe_process.wait_with_output());
+    let git_status = try!(git_process.wait());
 
-    if output.status.success() {
-        let txt = String::from_utf8_lossy(&output.stdout);
+    if git_status.success() && pipe_output.status.success() {
+        let txt = String::from_utf8_lossy(&pipe_output.stdout);
         debug!("Success: out={:?}", txt);
         Ok(String::from(&*txt))
     } else {
-        let out = String::from_utf8_lossy(&output.stdout);
-        let err = String::from_utf8_lossy(&output.stderr);
-        let code = output.status.code().unwrap_or(-1);
+        let out = String::from_utf8_lossy(&pipe_output.stdout);
+        let err = String::from_utf8_lossy(&pipe_output.stderr);
+        let code = pipe_output.status.code().unwrap_or(-1);
         debug!("Error: code={}, stdout={:?}, stderr={:?}", code, out, err);
         Err(GitCommandError::ExitCode(code, String::from(&*out).add(&*err)))
     }
